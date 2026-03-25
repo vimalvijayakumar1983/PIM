@@ -22,10 +22,25 @@ const DEFAULT_PROMPT_TEMPLATE = {
 };
 
 export async function initBullMQ() {
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+  const redisUrl = process.env.REDIS_URL || '';
+
+  if (!redisUrl) {
+    console.warn('REDIS_URL not set — BullMQ disabled, using mock queue');
+    aiQueue = {
+      add: async () => ({ id: 'mock-' + Date.now() }),
+      getJob: async () => null,
+    } as any;
+    return;
+  }
 
   try {
-    connection = new IORedis(redisUrl, { maxRetriesPerRequest: null });
+    connection = new IORedis(redisUrl, {
+      maxRetriesPerRequest: null,
+      retryStrategy: (times) => {
+        if (times > 3) return null; // Stop retrying after 3 attempts
+        return Math.min(times * 1000, 3000);
+      },
+    });
 
     aiQueue = new Queue('ai-content-generation', { connection });
 
