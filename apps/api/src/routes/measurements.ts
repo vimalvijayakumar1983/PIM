@@ -3,24 +3,24 @@ import { prisma } from '@pim/db';
 import { z } from 'zod';
 
 const familySchema = z.object({
-  name: z.string().min(1),
+  label: z.string().min(1),
   code: z.string().min(1),
   standardUnit: z.string().min(1),
 });
 
 const unitSchema = z.object({
-  name: z.string().min(1),
+  label: z.string().min(1),
   code: z.string().min(1),
   symbol: z.string().min(1),
   familyId: z.string(),
-  convertTo: z.number().default(1),
+  conversionFactor: z.number().default(1),
 });
 
 export async function measurementRoutes(app: FastifyInstance) {
   app.get('/', { preHandler: [app.authenticate] }, async (_req, reply) => {
     const families = await prisma.measurementFamily.findMany({
-      include: { units: { orderBy: { name: 'asc' } } },
-      orderBy: { name: 'asc' },
+      include: { units: { orderBy: { label: 'asc' } } },
+      orderBy: { label: 'asc' },
     });
     return reply.send({ success: true, data: families });
   });
@@ -53,12 +53,12 @@ export async function measurementRoutes(app: FastifyInstance) {
     });
     if (!family) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Measurement family not found' } });
 
-    const from = family.units.find((u: any) => u.code === fromUnit);
-    const to = family.units.find((u: any) => u.code === toUnit);
+    const from = family.units.find((u: { code: string }) => u.code === fromUnit);
+    const to = family.units.find((u: { code: string }) => u.code === toUnit);
     if (!from || !to) return reply.status(400).send({ success: false, error: { code: 'INVALID_UNIT', message: 'Unit not found' } });
 
-    const standardValue = value * from.convertTo;
-    const result = standardValue / to.convertTo;
+    const standardValue = value * Number(from.conversionFactor);
+    const result = standardValue / Number(to.conversionFactor);
     return reply.send({ success: true, data: { result, from: fromUnit, to: toUnit } });
   });
 }
