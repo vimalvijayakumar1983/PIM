@@ -21,6 +21,7 @@ import { ruleRoutes } from './routes/rules';
 import { qualityRoutes } from './routes/quality';
 import { notificationRoutes } from './routes/notifications';
 import { measurementRoutes } from './routes/measurements';
+import { channelRoutes } from './routes/channels';
 import { authMiddleware } from './middleware/auth';
 import { initBullMQ } from './jobs/queue';
 import { trpcPlugin } from './trpc/plugin';
@@ -77,6 +78,7 @@ async function buildApp() {
   await app.register(qualityRoutes, { prefix: '/api/quality' });
   await app.register(notificationRoutes, { prefix: '/api/notifications' });
   await app.register(measurementRoutes, { prefix: '/api/measurements' });
+  await app.register(channelRoutes, { prefix: '/api/channels' });
 
   // tRPC
   await app.register(trpcPlugin);

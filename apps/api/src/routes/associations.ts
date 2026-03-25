@@ -3,14 +3,14 @@ import { prisma } from '@pim/db';
 import { z } from 'zod';
 
 const associationTypeEnum = z.enum([
-  'CROSS_SELL', 'UP_SELL', 'SUBSTITUTION', 'PACK', 'ACCESSORY', 'SIMILAR',
+  'CROSS_SELL', 'UPSELL', 'SUBSTITUTE', 'PACK', 'ACCESSORY',
 ]);
 
 const associationSchema = z.object({
-  sourceProductId: z.string().min(1),
-  targetProductId: z.string().min(1),
+  fromId: z.string().min(1),
+  toId: z.string().min(1),
   type: associationTypeEnum,
-  position: z.number().default(0),
+  sortOrder: z.number().default(0),
 });
 
 const bulkAssociationSchema = z.object({
@@ -22,13 +22,13 @@ export async function associationRoutes(app: FastifyInstance) {
   app.get('/:productId', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { productId } = req.params as { productId: string };
     const associations = await prisma.productAssociation.findMany({
-      where: { sourceProductId: productId },
+      where: { fromId: productId },
       include: {
-        targetProduct: {
+        to: {
           select: { id: true, sku: true, title: true, rawTitle: true, status: true },
         },
       },
-      orderBy: [{ type: 'asc' }, { position: 'asc' }],
+      orderBy: [{ type: 'asc' }, { sortOrder: 'asc' }],
     });
 
     // Group by type
@@ -53,7 +53,7 @@ export async function associationRoutes(app: FastifyInstance) {
       });
     }
 
-    if (parsed.data.sourceProductId === parsed.data.targetProductId) {
+    if (parsed.data.fromId === parsed.data.toId) {
       return reply.status(400).send({
         success: false,
         error: { code: 'VALIDATION_ERROR', message: 'Cannot associate a product with itself' },
@@ -62,9 +62,9 @@ export async function associationRoutes(app: FastifyInstance) {
 
     const existing = await prisma.productAssociation.findUnique({
       where: {
-        sourceProductId_targetProductId_type: {
-          sourceProductId: parsed.data.sourceProductId,
-          targetProductId: parsed.data.targetProductId,
+        fromId_toId_type: {
+          fromId: parsed.data.fromId,
+          toId: parsed.data.toId,
           type: parsed.data.type,
         },
       },
@@ -79,7 +79,7 @@ export async function associationRoutes(app: FastifyInstance) {
     const assoc = await prisma.productAssociation.create({
       data: parsed.data,
       include: {
-        targetProduct: {
+        to: {
           select: { id: true, sku: true, title: true, rawTitle: true, status: true },
         },
       },
@@ -116,9 +116,9 @@ export async function associationRoutes(app: FastifyInstance) {
 
     for (const assocData of parsed.data.associations) {
       try {
-        if (assocData.sourceProductId === assocData.targetProductId) {
+        if (assocData.fromId === assocData.toId) {
           results.skipped++;
-          results.errors.push(`Skipped self-association for product ${assocData.sourceProductId}`);
+          results.errors.push(`Skipped self-association for product ${assocData.fromId}`);
           continue;
         }
 
