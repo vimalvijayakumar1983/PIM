@@ -25,7 +25,7 @@ export async function initBullMQ() {
   const redisUrl = process.env.REDIS_URL || '';
 
   if (!redisUrl) {
-    console.warn('REDIS_URL not set — BullMQ disabled, using mock queue');
+    console.warn('REDIS_URL not configured — BullMQ disabled, AI jobs will use mock queue');
     aiQueue = {
       add: async () => ({ id: 'mock-' + Date.now() }),
       getJob: async () => null,
