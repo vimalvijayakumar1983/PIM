@@ -29,10 +29,21 @@ async function buildApp() {
   });
 
   // Plugins
-  await app.register(cors, {
-    origin: process.env.NODE_ENV === 'production'
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',')
+    : process.env.NODE_ENV === 'production'
       ? ['https://pim.fepy.com']
-      : ['http://localhost:3000'],
+      : ['http://localhost:3000'];
+
+  await app.register(cors, {
+    origin: (origin, cb) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin || allowedOrigins.some(o => origin.startsWith(o) || origin.endsWith('.vercel.app'))) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
     credentials: true,
   });
 
