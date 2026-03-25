@@ -10,18 +10,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String         @id @default(cuid())
+  email         String         @unique
   name          String
   passwordHash  String
-  role          Role      @default(CATALOGER)
+  role          Role           @default(CATALOGER)
   avatar        String?
-  locale        String    @default("en")
-  timezone      String    @default("UTC")
-  isActive      Boolean   @default(true)
+  locale        String         @default("en")
+  timezone      String         @default("UTC")
+  isActive      Boolean        @default(true)
   lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   assignedTasks Task[]
   auditLogs     AuditLog[]
   notifications Notification[]
@@ -38,41 +38,40 @@ enum Role {
 }
 
 model Website {
-  id        String    @id @default(cuid())
-  name      String
-  domain    String    @unique
-  platform  String
-  apiUrl    String
-  apiToken  String
-  isActive  Boolean   @default(true)
-  products  Product[]
-  channels  WebsiteChannel[]
+  id       String           @id @default(cuid())
+  name     String
+  domain   String           @unique
+  platform String
+  apiUrl   String
+  apiToken String
+  isActive Boolean          @default(true)
+  products Product[]
+  channels WebsiteChannel[]
 }
 
-// Multi-channel support (website-specific channels)
+// Multi-channel support (website-specific)
 model WebsiteChannel {
-  id          String   @id @default(cuid())
-  name        String
-  code        String   @unique
-  websiteId   String
-  website     Website  @relation(fields: [websiteId], references: [id])
-  locales     ChannelLocale[]
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String          @id @default(cuid())
+  name      String
+  code      String          @unique
+  websiteId String
+  website   Website         @relation(fields: [websiteId], references: [id])
+  locales   ChannelLocale[]
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 }
 
 // Locales for multi-language
 model Locale {
-  id        String   @id @default(cuid())
-  code      String   @unique  // e.g. "en_US", "fr_FR", "ar_AE"
-  name      String            // e.g. "English (US)"
-  label     String?
-  isActive  Boolean  @default(true)
-  isDefault Boolean  @default(false)
-  channels  ChannelLocale[]
+  id                  String               @id @default(cuid())
+  code                String               @unique
+  label               String
+  isActive            Boolean              @default(true)
+  isDefault           Boolean              @default(false)
+  channels            ChannelLocale[]
   productTranslations ProductTranslation[]
-  contents  LocalizedContent[]
+  contents            LocalizedContent[]
 }
 
 model ChannelLocale {
@@ -85,69 +84,43 @@ model ChannelLocale {
   @@unique([channelId, localeId])
 }
 
-// Product Family (like Akeneo families)
+// Product Families (like Akeneo families - define required attributes per product type)
 model ProductFamily {
-  id              String   @id @default(cuid())
-  name            String   @unique
-  code            String   @unique
-  description     String?
-  imageAttribute  String?  // which attribute is the main image
-  labelAttribute  String?  // which attribute is used as label
-  products        Product[]
-  attributes      FamilyAttribute[]
-  attributeGroups AttributeGroup[]
-  completenessRules CompletenessRule[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-// Attribute Groups within a Family
-model AttributeGroup {
-  id              String   @id @default(cuid())
-  name            String
-  code            String
-  familyId        String
-  family          ProductFamily @relation(fields: [familyId], references: [id])
-  position        Int      @default(0)
-  attributes      FamilyAttribute[]
-  createdAt       DateTime @default(now())
-
-  @@unique([familyId, code])
+  id             String            @id @default(cuid())
+  name           String            @unique
+  code           String            @unique
+  description    String?
+  imageAttribute String?
+  products       Product[]
+  attributes     FamilyAttribute[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 // Attribute definitions
 model Attribute {
-  id              String          @id @default(cuid())
-  name            String
-  code            String          @unique
-  label           String?
-  type            AttributeType
-  group           String          @default("general")
-  isRequired      Boolean         @default(false)
-  isUnique        Boolean         @default(false)
-  isLocalizable   Boolean         @default(false)  // can have different values per locale
-  isScopable      Boolean         @default(false)  // can have different values per channel
-  validationRule  String?         // regex, url, email, etc.
-  validationRegex String?
-  validationMin   Float?
-  validationMax   Float?
-  maxLength       Int?
-  allowedValues   Json?           // for select/multiselect types
-  options         Json?
-  defaultValue    String?
-  unit            String?         // measurement unit
-  unitFamily      String?         // measurement family (length, weight, etc.)
+  id                String                  @id @default(cuid())
+  code              String                  @unique
+  label             String
+  type              AttributeType
+  group             String                  @default("general")
+  isRequired        Boolean                 @default(false)
+  isUnique          Boolean                 @default(false)
+  isLocalizable     Boolean                 @default(false)
+  isScopable        Boolean                 @default(false)
+  validationRule    String?
+  validationRegex   String?
+  maxLength         Int?
+  options           Json?
+  sortOrder         Int                     @default(0)
   measurementFamily String?
-  defaultUnit     String?
-  tooltip         String?
-  sortOrder       Int             @default(0)
-  position        Int             @default(0)
-  families        FamilyAttribute[]
-  values          ProductAttributeValue[]
-  ruleConditions  RuleCondition[]
-  ruleActions     RuleAction[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  defaultUnit       String?
+  familyAttributes  FamilyAttribute[]
+  values            ProductAttributeValue[]
+  ruleConditions    RuleCondition[]
+  ruleActions       RuleAction[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
 }
 
 enum AttributeType {
@@ -163,121 +136,103 @@ enum AttributeType {
   METRIC
   IMAGE
   FILE
-  URL
   COLOR
+  URL
   IDENTIFIER
 }
 
-// Join table: which attributes belong to which family group
+// Which attributes belong to which family + completeness requirements
 model FamilyAttribute {
-  id              String         @id @default(cuid())
-  familyId        String
-  family          ProductFamily  @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  attributeId     String
-  attribute       Attribute      @relation(fields: [attributeId], references: [id], onDelete: Cascade)
-  groupId         String?
-  group           AttributeGroup? @relation(fields: [groupId], references: [id])
-  isRequired      Boolean        @default(false)
-  channel         String?
-  sortOrder       Int            @default(0)
-  position        Int            @default(0)
+  id          String        @id @default(cuid())
+  familyId    String
+  family      ProductFamily @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  attributeId String
+  attribute   Attribute     @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  isRequired  Boolean       @default(false)
+  channel     String?
+  sortOrder   Int           @default(0)
 
   @@unique([familyId, attributeId])
 }
 
-// Completeness rules per family
-model CompletenessRule {
-  id            String        @id @default(cuid())
-  familyId      String
-  family        ProductFamily @relation(fields: [familyId], references: [id])
-  channelCode   String
-  localeCode    String
-  requiredFields Json          // array of attribute codes that must be filled
-  createdAt     DateTime      @default(now())
-
-  @@unique([familyId, channelCode, localeCode])
-}
-
 // Product catalog
 model Product {
-  id              String          @id @default(cuid())
-  sku             String          @unique
-  websiteId       String
-  website         Website         @relation(fields: [websiteId], references: [id])
-  categoryId      String?
-  category        Category?       @relation(fields: [categoryId], references: [id])
-  familyId        String?
-  family          ProductFamily?  @relation(fields: [familyId], references: [id])
-  brand           String?
-  status          ProductStatus   @default(DRAFT)
-  priority        Priority        @default(MEDIUM)
-  completeness    Float           @default(0)  // 0-100 percentage
-  completenessScore Int           @default(0)
+  id                String         @id @default(cuid())
+  sku               String         @unique
+  websiteId         String
+  website           Website        @relation(fields: [websiteId], references: [id])
+  categoryId        String?
+  category          Category?      @relation(fields: [categoryId], references: [id])
+  familyId          String?
+  family            ProductFamily? @relation(fields: [familyId], references: [id])
+  brand             String?
+  status            ProductStatus  @default(DRAFT)
+  priority          Priority       @default(MEDIUM)
+  completeness      Float          @default(0) // 0-100 percentage
+  completenessScore Int            @default(0)
 
   // Product type for variants
-  productType     ProductType     @default(SIMPLE)
-  parentId        String?
-  parent          Product?        @relation("ProductVariants", fields: [parentId], references: [id])
-  variants        Product[]       @relation("ProductVariants")
-  isVariant       Boolean         @default(false)
-  variantAxis     Json?           // e.g. ["color", "size"]
+  productType ProductType @default(SIMPLE)
+  parentId    String?
+  parent      Product?    @relation("ProductVariants", fields: [parentId], references: [id])
+  variants    Product[]   @relation("ProductVariants")
+  isVariant   Boolean     @default(false)
+  variantAxis Json? // e.g. ["color", "size"]
 
   // Raw data from ERP/import
-  rawTitle        String?
-  rawDescription  String?
-  rawSpecs        Json?
+  rawTitle       String?
+  rawDescription String?
+  rawSpecs       Json?
 
   // AI-generated content
-  aiTitle         String?
-  aiMetaTitle     String?
-  aiMetaDesc      String?
-  aiShortDesc     String?
-  aiLongDesc      String?
-  aiSpecs         Json?
-  aiFaqs          Json?
-  aiSchemaMarkup  Json?
-  aiModel         String?
-  aiGeneratedAt   DateTime?
-  aiQualityScore  Float?          // AI-assessed quality score
+  aiTitle        String?
+  aiMetaTitle    String?
+  aiMetaDesc     String?
+  aiShortDesc    String?
+  aiLongDesc     String?
+  aiSpecs        Json?
+  aiFaqs         Json?
+  aiSchemaMarkup Json?
+  aiModel        String?
+  aiGeneratedAt  DateTime?
+  aiQualityScore Float? // AI-assessed quality score
 
   // Approved/published content
-  title           String?
-  metaTitle       String?
-  metaDesc        String?
-  shortDesc       String?
-  longDesc        String?
-  specs           Json?
-  faqs            Json?
-  schemaMarkup    Json?
+  title        String?
+  metaTitle    String?
+  metaDesc     String?
+  shortDesc    String?
+  longDesc     String?
+  specs        Json?
+  faqs         Json?
+  schemaMarkup Json?
 
   // Pricing
-  costPrice       Decimal?
-  sellingPrice    Decimal?
-  marginPct       Decimal?
-  currency        String          @default("INR")
+  costPrice    Decimal?
+  sellingPrice Decimal?
+  marginPct    Decimal?
+  currency     String   @default("INR")
 
   // Data quality
-  qualityScore    Float           @default(0)  // 0-100
+  qualityScore Int @default(0)
 
   // Sync
-  magentoId       String?
-  lastSyncedAt    DateTime?
-  syncStatus      SyncStatus      @default(PENDING)
+  magentoId    String?
+  lastSyncedAt DateTime?
+  syncStatus   SyncStatus @default(PENDING)
 
-  images          ProductImage[]
-  tasks           Task[]
-  auditLogs       AuditLog[]
-  embedding       ProductEmbedding?
-  attributeValues ProductAttributeValue[]
-  translations    ProductTranslation[]
+  images           ProductImage[]
+  tasks            Task[]
+  auditLogs        AuditLog[]
+  embedding        ProductEmbedding?
+  attributeValues  ProductAttributeValue[]
+  translations     ProductTranslation[]
   localizedContent LocalizedContent[]
-  associations    ProductAssociation[]    @relation("SourceProduct")
-  associatedFrom  ProductAssociation[]    @relation("TargetProduct")
-  associationsFrom ProductAssociation[]   @relation("AssocFrom")
-  associationsTo   ProductAssociation[]   @relation("AssocTo")
+  associationsFrom ProductAssociation[]    @relation("AssocFrom")
+  associationsTo   ProductAssociation[]    @relation("AssocTo")
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum ProductType {
@@ -311,121 +266,101 @@ enum SyncStatus {
   SKIPPED
 }
 
-// Dynamic attribute values for products
+// Attribute values for products
 model ProductAttributeValue {
-  id            String    @id @default(cuid())
-  productId     String
-  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  attributeId   String
-  attribute     Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
-  locale        String?
-  channel       String?
-  localeCode    String?   // null if not localizable
-  channelCode   String?   // null if not scopable
-  textValue     String?   @db.Text
-  valueText     String?   @db.Text
-  numberValue   Float?
-  valueNumber   Decimal?
-  booleanValue  Boolean?
-  valueBoolean  Boolean?
-  dateValue     DateTime?
-  valueDate     DateTime?
-  jsonValue     Json?     // for multiselect, price collections, etc.
-  valueJson     Json?
-  mediaUrl      String?   // for image/file types
-  unit          String?   // for metric type
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeId  String
+  attribute    Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  locale       String?
+  channel      String?
+  valueText    String?   @db.Text
+  valueNumber  Decimal?
+  valueBoolean Boolean?
+  valueDate    DateTime?
+  valueJson    Json?
+  unit         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  @@unique([productId, attributeId, localeCode, channelCode])
+  @@unique([productId, attributeId, locale, channel])
 }
 
-// Multi-language product content
+// Multi-language product content (legacy)
 model ProductTranslation {
-  id            String   @id @default(cuid())
-  productId     String
-  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  localeId      String
-  locale        Locale   @relation(fields: [localeId], references: [id])
-  title         String?
-  metaTitle     String?
-  metaDesc      String?
-  shortDesc     String?
-  longDesc      String?  @db.Text
-  specs         Json?
-  faqs          Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  localeId  String
+  locale    Locale   @relation(fields: [localeId], references: [id])
+  title     String?
+  metaTitle String?
+  metaDesc  String?
+  shortDesc String?
+  longDesc  String?  @db.Text
+  specs     Json?
+  faqs      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([productId, localeId])
 }
 
-// Product associations (cross-sell, up-sell, etc.)
+// Product Associations (cross-sell, upsell, substitutes, accessories)
 model ProductAssociation {
-  id              String          @id @default(cuid())
-  sourceProductId String
-  sourceProduct   Product         @relation("SourceProduct", fields: [sourceProductId], references: [id], onDelete: Cascade)
-  targetProductId String
-  targetProduct   Product         @relation("TargetProduct", fields: [targetProductId], references: [id], onDelete: Cascade)
-  fromId          String
-  from            Product         @relation("AssocFrom", fields: [fromId], references: [id], onDelete: Cascade)
-  toId            String
-  to              Product         @relation("AssocTo", fields: [toId], references: [id], onDelete: Cascade)
-  type            AssociationType
-  sortOrder       Int             @default(0)
-  position        Int             @default(0)
-  createdAt       DateTime        @default(now())
+  id        String          @id @default(cuid())
+  fromId    String
+  from      Product         @relation("AssocFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId      String
+  to        Product         @relation("AssocTo", fields: [toId], references: [id], onDelete: Cascade)
+  type      AssociationType
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
 
-  @@unique([sourceProductId, targetProductId, type])
   @@unique([fromId, toId, type])
 }
 
 enum AssociationType {
   CROSS_SELL
-  UP_SELL
   UPSELL
-  SUBSTITUTION
   SUBSTITUTE
-  PACK
   ACCESSORY
-  SIMILAR
+  PACK
 }
 
 // Enrichment rules engine
 model EnrichmentRule {
-  id          String     @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
-  priority    Int        @default(0)
-  isActive    Boolean    @default(true)
-  conditions  Json       // e.g. [{"field": "brand", "operator": "equals", "value": "X"}]
-  actions     Json       // e.g. [{"type": "set_value", "field": "category", "value": "Y"}]
-  runCount    Int        @default(0)
+  priority    Int       @default(0)
+  isActive    Boolean   @default(true)
+  conditions  Json // e.g. [{"field": "brand", "operator": "equals", "value": "X"}]
+  actions     Json // e.g. [{"type": "set_value", "field": "category", "value": "Y"}]
+  runCount    Int       @default(0)
   lastRunAt   DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
-// Measurement families & units
+// Measurement families and units
 model MeasurementFamily {
-  id          String   @id @default(cuid())
-  name        String
-  code        String   @unique   // e.g. "length", "weight", "volume"
-  label       String?
-  standardUnit String             // e.g. "meter", "kilogram"
-  units       MeasurementUnit[]
+  id           String            @id @default(cuid())
+  code         String            @unique
+  label        String
+  standardUnit String
+  units        MeasurementUnit[]
 }
 
 model MeasurementUnit {
   id               String            @id @default(cuid())
-  name             String
   code             String
-  symbol           String
-  label            String?
+  label            String
   familyId         String
   family           MeasurementFamily @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  convertTo        Float             @default(1)  // multiplier to convert to standard unit
   conversionFactor Decimal           @default(1)
+  symbol           String
 
   @@unique([familyId, code])
 }
@@ -435,11 +370,10 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  type      String   // "task_assigned", "review_needed", "ai_complete", "sync_failed", etc.
+  type      String
   title     String
   message   String
   data      Json?
-  link      String?  // URL to navigate to
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
@@ -460,20 +394,20 @@ model Category {
 }
 
 model ProductImage {
-  id         String   @id @default(cuid())
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  url        String
-  altText    String?
-  caption    String?
-  tags       Json?    // e.g. ["lifestyle", "front-view"]
-  width      Int?
-  height     Int?
-  fileSize   Int?
-  mimeType   String?
-  position   Int      @default(0)
-  isPrimary  Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  caption   String?
+  tags      Json? // e.g. ["lifestyle", "front-view"]
+  width     Int?
+  height    Int?
+  fileSize  Int?
+  mimeType  String?
+  position  Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model PromptTemplate {
@@ -526,48 +460,44 @@ enum TaskStatus {
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  productId  String?
-  product    Product? @relation(fields: [productId], references: [id])
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  action     String
-  entity     String?  // "product", "category", "family", etc.
-  entityId   String?
-  field      String?
-  oldValue   String?  @db.Text
-  newValue   String?  @db.Text
-  metadata   Json?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String? // "product", "category", "family", etc.
+  entityId  String?
+  field     String?
+  oldValue  String?  @db.Text
+  newValue  String?  @db.Text
+  metadata  Json?
+  createdAt DateTime @default(now())
 }
 
 model ProductEmbedding {
-  id        String  @id @default(cuid())
-  productId String  @unique
-  product   Product @relation(fields: [productId], references: [id])
+  id        String                       @id @default(cuid())
+  productId String                       @unique
+  product   Product                      @relation(fields: [productId], references: [id])
   embedding Unsupported("vector(1536)")?
 }
 
-// ============================================================
-// NEW MODELS
-// ============================================================
-
-// Multi-language support (localized content per product)
+// Multi-language support
 model LocalizedContent {
-  id          String   @id @default(cuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  localeId    String
-  locale      Locale   @relation(fields: [localeId], references: [id])
-  title       String?
-  metaTitle   String?
-  metaDesc    String?
-  shortDesc   String?
-  longDesc    String?  @db.Text
-  specs       Json?
-  faqs        Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  localeId  String
+  locale    Locale   @relation(fields: [localeId], references: [id])
+  title     String?
+  metaTitle String?
+  metaDesc  String?
+  shortDesc String?
+  longDesc  String?  @db.Text
+  specs     Json?
+  faqs      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([productId, localeId])
 }
@@ -588,9 +518,9 @@ model Rule {
 }
 
 model RuleCondition {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   ruleId      String
-  rule        Rule      @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  rule        Rule       @relation(fields: [ruleId], references: [id], onDelete: Cascade)
   attributeId String?
   attribute   Attribute? @relation(fields: [attributeId], references: [id])
   field       String
@@ -598,21 +528,21 @@ model RuleCondition {
   value       String
   locale      String?
   channel     String?
-  sortOrder   Int       @default(0)
+  sortOrder   Int        @default(0)
 }
 
 model RuleAction {
-  id          String    @id @default(cuid())
+  id          String         @id @default(cuid())
   ruleId      String
-  rule        Rule      @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  rule        Rule           @relation(fields: [ruleId], references: [id], onDelete: Cascade)
   type        RuleActionType
   attributeId String?
-  attribute   Attribute? @relation(fields: [attributeId], references: [id])
+  attribute   Attribute?     @relation(fields: [attributeId], references: [id])
   field       String?
   value       String?
   locale      String?
   channel     String?
-  sortOrder   Int       @default(0)
+  sortOrder   Int            @default(0)
 }
 
 enum RuleActionType {
@@ -629,26 +559,26 @@ enum RuleActionType {
 
 // Data Quality
 model QualityRule {
-  id          String   @id @default(cuid())
-  name        String
-  type        String
-  field       String
-  condition   String
-  value       String?
-  severity    String   @default("warning")
-  message     String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  field     String
+  condition String
+  value     String?
+  severity  String   @default("warning")
+  message   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 // Channel/Scope (for multi-channel content)
 model Channel {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  label       String
-  currencies  Json?
-  locales     Json?
+  id           String   @id @default(cuid())
+  code         String   @unique
+  label        String
+  currencies   Json?
+  locales      Json?
   categoryTree String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
 }
