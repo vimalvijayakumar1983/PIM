@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
+    "build": "turbo build --filter=@pim/api...",
+    "start": "cd apps/api && npm run start",
     "lint": "turbo lint",
     "db:generate": "turbo db:generate",
     "db:push": "turbo db:push",
