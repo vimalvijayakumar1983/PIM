@@ -1,0 +1,77 @@
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'packages/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'packages/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: pim_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm install
+
+      - name: Generate Prisma client
+        run: npx turbo run db:generate
+
+      - name: Build packages
+        run: npx turbo run build --filter=@pim/api
+
+      - name: TypeScript check
+        run: npx turbo run lint --filter=@pim/api
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/pim_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_jwt_secret_at_least_32_chars_long!!
+          JWT_REFRESH_SECRET: test_refresh_secret_at_least_32_chars!!
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Deploy to Railway
+        run: |
+          curl -X POST "${{ secrets.RAILWAY_DEPLOY_WEBHOOK }}" \
+            -H "Content-Type: application/json" || true

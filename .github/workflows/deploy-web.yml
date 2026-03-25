@@ -1,0 +1,38 @@
+name: Deploy Web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm install
+
+      - name: TypeScript check
+        run: npx turbo run lint --filter=@pim/web
+
+      - name: Build
+        run: npx turbo run build --filter=@pim/web
+        env:
+          NEXT_PUBLIC_API_URL: https://api.pim.fepy.com
+
+  # Vercel auto-deploys from GitHub integration
+  # This workflow just validates the build

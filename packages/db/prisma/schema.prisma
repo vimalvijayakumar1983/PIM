@@ -1,0 +1,208 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector", schema: "public")]
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          Role      @default(CATALOGER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  assignedTasks Task[]
+  auditLogs     AuditLog[]
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  CONTENT_MANAGER
+  CATALOGER
+  REVIEWER
+  FINANCE
+  VIEWER
+}
+
+model Website {
+  id        String    @id @default(cuid())
+  name      String
+  domain    String    @unique
+  platform  String
+  apiUrl    String
+  apiToken  String
+  isActive  Boolean   @default(true)
+  products  Product[]
+}
+
+model Product {
+  id              String          @id @default(cuid())
+  sku             String          @unique
+  websiteId       String
+  website         Website         @relation(fields: [websiteId], references: [id])
+  categoryId      String?
+  category        Category?       @relation(fields: [categoryId], references: [id])
+  brand           String?
+  status          ProductStatus   @default(DRAFT)
+  priority        Priority        @default(MEDIUM)
+
+  rawTitle        String?
+  rawDescription  String?
+  rawSpecs        Json?
+
+  aiTitle         String?
+  aiMetaTitle     String?
+  aiMetaDesc      String?
+  aiShortDesc     String?
+  aiLongDesc      String?
+  aiSpecs         Json?
+  aiFaqs          Json?
+  aiSchemaMarkup  Json?
+  aiModel         String?
+  aiGeneratedAt   DateTime?
+
+  title           String?
+  metaTitle       String?
+  metaDesc        String?
+  shortDesc       String?
+  longDesc        String?
+  specs           Json?
+  faqs            Json?
+  schemaMarkup    Json?
+
+  costPrice       Decimal?
+  sellingPrice    Decimal?
+  marginPct       Decimal?
+
+  magentoId       String?
+  lastSyncedAt    DateTime?
+  syncStatus      SyncStatus      @default(PENDING)
+
+  images          ProductImage[]
+  tasks           Task[]
+  auditLogs       AuditLog[]
+  embedding       ProductEmbedding?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+enum ProductStatus {
+  DRAFT
+  AI_GENERATED
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCED
+  FAILED
+  SKIPPED
+}
+
+model Category {
+  id               String          @id @default(cuid())
+  name             String
+  slug             String          @unique
+  parentId         String?
+  parent           Category?       @relation("CategoryTree", fields: [parentId], references: [id])
+  children         Category[]      @relation("CategoryTree")
+  promptTemplateId String?
+  promptTemplate   PromptTemplate? @relation(fields: [promptTemplateId], references: [id])
+  products         Product[]
+}
+
+model ProductImage {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  url        String
+  altText    String?
+  position   Int      @default(0)
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model PromptTemplate {
+  id             String     @id @default(cuid())
+  name           String
+  version        Int        @default(1)
+  isActive       Boolean    @default(true)
+  titlePrompt    String     @db.Text
+  descPrompt     String     @db.Text
+  specsPrompt    String     @db.Text
+  faqPrompt      String     @db.Text
+  seoPrompt      String     @db.Text
+  preferredModel String     @default("claude")
+  categories     Category[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id])
+  assignedToId String?
+  assignedTo   User?      @relation(fields: [assignedToId], references: [id])
+  type         TaskType
+  status       TaskStatus @default(PENDING)
+  notes        String?
+  dueDate      DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+enum TaskType {
+  ENRICH_CONTENT
+  REVIEW_CONTENT
+  APPROVE_PRICING
+  UPLOAD_IMAGES
+  PUBLISH
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  field      String?
+  oldValue   String?  @db.Text
+  newValue   String?  @db.Text
+  createdAt  DateTime @default(now())
+}
+
+model ProductEmbedding {
+  id        String  @id @default(cuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id])
+  embedding Unsupported("vector(1536)")?
+}
