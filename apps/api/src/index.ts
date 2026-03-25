@@ -13,6 +13,14 @@ import { promptTemplateRoutes } from './routes/prompt-templates';
 import { imageRoutes } from './routes/images';
 import { syncRoutes } from './routes/sync';
 import { aiRoutes } from './routes/ai';
+import { familyRoutes } from './routes/families';
+import { attributeRoutes } from './routes/attributes';
+import { localeRoutes } from './routes/locales';
+import { associationRoutes } from './routes/associations';
+import { ruleRoutes } from './routes/rules';
+import { qualityRoutes } from './routes/quality';
+import { notificationRoutes } from './routes/notifications';
+import { measurementRoutes } from './routes/measurements';
 import { authMiddleware } from './middleware/auth';
 import { initBullMQ } from './jobs/queue';
 import { trpcPlugin } from './trpc/plugin';
@@ -61,6 +69,14 @@ async function buildApp() {
   await app.register(imageRoutes, { prefix: '/api/images' });
   await app.register(syncRoutes, { prefix: '/api/sync' });
   await app.register(aiRoutes, { prefix: '/api/ai' });
+  await app.register(familyRoutes, { prefix: '/api/families' });
+  await app.register(attributeRoutes, { prefix: '/api/attributes' });
+  await app.register(localeRoutes, { prefix: '/api/locales' });
+  await app.register(associationRoutes, { prefix: '/api/associations' });
+  await app.register(ruleRoutes, { prefix: '/api/rules' });
+  await app.register(qualityRoutes, { prefix: '/api/quality' });
+  await app.register(notificationRoutes, { prefix: '/api/notifications' });
+  await app.register(measurementRoutes, { prefix: '/api/measurements' });
 
   // tRPC
   await app.register(trpcPlugin);
