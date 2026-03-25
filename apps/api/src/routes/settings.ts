@@ -24,7 +24,7 @@ export async function settingsRoutes(app: FastifyInstance) {
   }, async (_request, reply) => {
     const websites = await prisma.website.findMany({ orderBy: { name: 'asc' } });
     // Mask API tokens
-    const masked = websites.map((w) => ({ ...w, apiToken: '****' + w.apiToken.slice(-4) }));
+    const masked = websites.map((w: { apiToken: string; [key: string]: unknown }) => ({ ...w, apiToken: '****' + w.apiToken.slice(-4) }));
     return reply.send({ success: true, data: masked });
   });
 

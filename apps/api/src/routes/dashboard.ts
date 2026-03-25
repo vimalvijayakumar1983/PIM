@@ -33,15 +33,15 @@ export async function dashboardRoutes(app: FastifyInstance) {
     ]);
 
     // Get user names for task stats
-    const userIds = tasksByUser.map((t) => t.assignedToId).filter(Boolean) as string[];
+    const userIds = tasksByUser.map((t: { assignedToId: string | null }) => t.assignedToId).filter(Boolean) as string[];
     const users = userIds.length > 0
       ? await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true } })
       : [];
 
     const teamProductivity = tasksByUser
-      .filter((t) => t.assignedToId)
-      .map((t) => {
-        const user = users.find((u) => u.id === t.assignedToId);
+      .filter((t: { assignedToId: string | null }) => t.assignedToId)
+      .map((t: { assignedToId: string | null; _count: number }) => {
+        const user = users.find((u: { id: string; name: string }) => u.id === t.assignedToId);
         return { userId: t.assignedToId, name: user?.name || 'Unknown', completedTasks: t._count };
       });
 
@@ -54,7 +54,7 @@ export async function dashboardRoutes(app: FastifyInstance) {
         aiGeneratedLast24h,
         failedSyncs,
         lastSyncTime: lastSynced?.lastSyncedAt?.toISOString() || null,
-        statusFunnel: statusCounts.map((s) => ({ status: s.status, count: s._count })),
+        statusFunnel: statusCounts.map((s: { status: string; _count: number }) => ({ status: s.status, count: s._count })),
         teamProductivity,
       },
     });

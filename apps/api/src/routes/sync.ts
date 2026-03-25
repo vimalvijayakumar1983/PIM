@@ -169,7 +169,7 @@ export async function syncRoutes(app: FastifyInstance) {
     return reply.send({
       success: true,
       data: {
-        counts: counts.map((c) => ({ status: c.syncStatus, count: c._count })),
+        counts: counts.map((c: { syncStatus: string; _count: number }) => ({ status: c.syncStatus, count: c._count })),
         lastSync: lastSync ? { time: lastSync.lastSyncedAt, sku: lastSync.sku } : null,
       },
     });
