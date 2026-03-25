@@ -1,5 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
+// Use same-origin requests via Next.js rewrites (no CORS needed)
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('pim_access_token');
@@ -14,17 +13,17 @@ function getHeaders(includeContentType = true): HeadersInit {
 }
 
 function buildUrl(path: string, params?: Record<string, any>): string {
-  // Ensure path starts with /api/
   const apiPath = path.startsWith('/api/') ? path : `/api${path.startsWith('/') ? '' : '/'}${path}`;
-  const url = new URL(apiPath, API_URL);
+  const qs = new URLSearchParams();
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        url.searchParams.set(key, String(value));
+        qs.set(key, String(value));
       }
     });
   }
-  return url.toString();
+  const query = qs.toString();
+  return query ? `${apiPath}?${query}` : apiPath;
 }
 
 async function handleResponse(res: Response) {
