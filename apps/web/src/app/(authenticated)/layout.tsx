@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { Sidebar } from '@/components/sidebar';
+import { TopBar } from '@/components/topbar';
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -16,10 +17,11 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
   }, [isAuthenticated, router]);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen bg-[#F7F7F7]">
       <Sidebar />
-      <main className="flex-1 bg-gray-50 overflow-auto">
-        <div className="p-8">{children}</div>
+      <TopBar />
+      <main className="ml-[var(--sidebar-width)] mt-[var(--topbar-height)]">
+        <div className="p-6">{children}</div>
       </main>
     </div>
   );
